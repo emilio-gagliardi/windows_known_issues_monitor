@@ -1,12 +1,17 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-import models
-import schemas
-from database import get_db, engine
-from scraper import scrape_url, get_latest_scrape
+from app import models
+from app import schemas
+from app.database import get_db, engine
+from app.scraper import scrape_url, get_latest_scrape, periodic_scrape
+from app.url_repository import URLRepository
+import hashlib
+
+url_repo = URLRepository()
 
 
 @asynccontextmanager
@@ -14,8 +19,19 @@ async def lifespan(app: FastAPI):
     # Startup
     async with engine.begin() as conn:
         await conn.run_sync(models.Base.metadata.create_all)
+
+    async with AsyncSession(engine) as session:
+        await url_repo.load_cache(session)
+
+    scrape_task = asyncio.create_task(periodic_scrape(AsyncSession(engine)))
     yield
+
     # Shutdown
+    scrape_task.cancel()
+    try:
+        await scrape_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
 
 
@@ -24,10 +40,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/urls/", response_model=schemas.URL)
 async def create_url(url: schemas.URLCreate, db: AsyncSession = Depends(get_db)):
-    db_url = models.URL(url=url.url)
-    db.add(db_url)
-    await db.commit()
-    await db.refresh(db_url)
+    db_url = await url_repo.create_url(db, url.url)
     return db_url
 
 
@@ -43,15 +56,48 @@ async def read_urls(
 async def create_scrape(
     scrape: schemas.ScrapeCreate, db: AsyncSession = Depends(get_db)
 ):
-    db_scrape = models.Scrape(**scrape.dict())
+    content_hash = hashlib.md5(scrape.content.encode()).hexdigest()
+
+    # Check if this hash already exists for the given URL
+    existing_scrape = await db.execute(
+        select(models.Scrape)
+        .filter(
+            models.Scrape.url_id == scrape.url_id, models.Scrape.hash == content_hash
+        )
+        .order_by(models.Scrape.timestamp.desc())
+    )
+    if existing_scrape.scalar_one_or_none():
+        return {"message": "No changes detected"}
+
+    db_scrape = models.Scrape(**scrape.dict(), hash=content_hash)
     db.add(db_scrape)
     await db.commit()
     await db.refresh(db_scrape)
     return db_scrape
 
 
-@app.get("/scrapes/{url_id}", response_model=List[schemas.Scrape])
-async def read_scrapes(
+@app.get("/scrapes/{scrape_id}", response_model=schemas.Scrape)
+async def read_scrape(scrape_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.Scrape).filter(models.Scrape.id == scrape_id)
+    )
+    scrape = result.scalar_one_or_none()
+    if scrape is None:
+        raise HTTPException(status_code=404, detail="Scrape not found")
+    return scrape
+
+
+@app.get("/scrapes/", response_model=List[schemas.Scrape])
+async def read_all_scrapes(
+    skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(models.Scrape).offset(skip).limit(limit))
+    return result.scalars().all()
+
+
+# Keep your existing route as well
+@app.get("/scrapes/urlid/{url_id}", response_model=List[schemas.Scrape])
+async def read_scrapes_by_urlid(
     url_id: int, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(

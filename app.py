@@ -84,10 +84,10 @@ if page == "Dashboard":
 
                     scrape_type = st.selectbox(
                         "Scrape Type",
-                        options=["Critical", "Active", "Resolved", "Ignore"],
+                        options=["Critical", "Active", "Resolved", "Ignore", "test"],
                         key=f"type_{scrape['id']}",
                         index=(
-                            ["Critical", "Active", "Resolved", "Ignore"].index(
+                            ["Critical", "Active", "Resolved", "Ignore", "test"].index(
                                 scrape["scrape_type"]
                             )
                             if scrape["scrape_type"]

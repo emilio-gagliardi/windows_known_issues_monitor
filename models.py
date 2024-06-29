@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from database import Base
+from app.database import Base
 
 
 class URL(Base):
@@ -8,6 +8,7 @@ class URL(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     url = Column(String, unique=True, index=True)
+    last_scraped = Column(DateTime, nullable=True)
     scrapes = relationship("Scrape", back_populates="url")
 
 
@@ -18,11 +19,12 @@ class Scrape(Base):
     url_id = Column(Integer, ForeignKey("urls.id"))
     timestamp = Column(DateTime)
     content = Column(String)
-    scrape_type = Column(String)  # New field
-    scrape_comment = Column(String)  # New field
-    create_alert = Column(Boolean, default=False)  # New field
+    scrape_type = Column(String)
+    scrape_comment = Column(String)
+    create_alert = Column(Boolean, default=False)
     url = relationship("URL", back_populates="scrapes")
     changes = relationship("Change", back_populates="scrape")
+    hash = Column(String(32), index=True)
 
 
 class Change(Base):

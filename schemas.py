@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -15,9 +15,7 @@ class URLCreate(URLBase):
 
 class URL(URLBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 print("URL schemas defined")
@@ -38,15 +36,14 @@ class ScrapeCreate(ScrapeBase):
 class Scrape(ScrapeBase):
     id: int
     url_id: int
-
-    class Config:
-        from_attributes = True  # Changed from orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScrapeUpdate(BaseModel):
     scrape_type: Optional[str] = None
     scrape_comment: Optional[str] = None
     create_alert: Optional[bool] = None
+    content: Optional[str] = None
 
 
 print("Scrape schemas defined")
@@ -60,9 +57,7 @@ class ChangeBase(BaseModel):
 class Change(ChangeBase):
     id: int
     scrape_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Add a test function to verify schema creation
