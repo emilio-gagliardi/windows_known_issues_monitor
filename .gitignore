@@ -1,0 +1,14 @@
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore Visual Studio Code workspace files
+*.code-workspace
+.vscode/
+
+# pytest cache directory
+.pytest_cache/
