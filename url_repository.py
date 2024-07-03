@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from app.models import URL
@@ -7,10 +8,11 @@ class URLRepository:
     def __init__(self):
         self.url_cache = set()
 
-    async def load_cache(self, db):
+    def load_cache(self, session: Session):
         query = select(URL.url)
-        result = await db.execute(query)
-        self.url_cache = set(row[0] for row in result)
+        result = session.execute(query)
+        urls = result.scalars().all()
+        self.url_cache = set(urls)
 
     async def create_url(self, db, url: str):
         if url in self.url_cache:
