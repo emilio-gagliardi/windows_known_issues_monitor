@@ -10,14 +10,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 SQLALCHEMY_DATABASE_URL = f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 
 try:
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        echo=True,  # Set to False in production
-    )
-    # logger.info("Database engine created successfully.")
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 except Exception as e:
     logger.error(f"Error creating database engine: {e}")
     raise

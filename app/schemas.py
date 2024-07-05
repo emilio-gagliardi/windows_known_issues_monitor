@@ -15,7 +15,7 @@ class URLCreate(URLBase):
 
 class URL(URLBase):
     id: int
-    model_config = ConfigDict(orm_mode=True, from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScrapeBase(BaseModel):
@@ -34,7 +34,10 @@ class ScrapeCreate(ScrapeBase):
 class Scrape(ScrapeBase):
     id: int
     url_id: int
-    model_config = ConfigDict(orm_mode=True, from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
+
+
+# orm_mode=True,
 
 
 class ScrapeUpdate(BaseModel):
@@ -53,7 +56,7 @@ class ChangeBase(BaseModel):
 class Change(ChangeBase):
     id: int
     scrape_id: int
-    model_config = ConfigDict(orm_mode=True, from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Add a test function to verify schema creation

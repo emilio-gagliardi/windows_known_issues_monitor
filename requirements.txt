@@ -1,0 +1,13 @@
+fastapi
+asyncio
+uvicorn
+sqlalchemy
+psycopg2-binary
+streamlit
+sendgrid
+python-dotenv
+playwright
+beautifulsoup4
+lxml
+pydantic
+pandas

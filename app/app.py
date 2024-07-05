@@ -11,7 +11,7 @@ from operator import itemgetter
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-API_URL = "http://localhost:8000"
+API_URL = "http://fastapi:8000"
 
 st.set_page_config(layout="wide")
 
