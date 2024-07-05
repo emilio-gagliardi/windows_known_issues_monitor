@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:16
     environment:
-      - POSTGRES_DB=windows_known_issues_monitor
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=js\$GubvkIS5eoYrh\$V3NB
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - ./init-scripts:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
@@ -33,10 +33,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=js\$GubvkIS5eoYrh\$V3NB
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
-      - DB_NAME=windows_known_issues_monitor
+      - DB_NAME=${DB_NAME}
     env_file:
       - .env.docker
     networks:
@@ -50,10 +50,10 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=js$GubvkIS5eoYrh$V3NB
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
-      - DB_NAME=windows_known_issues_monitor
+      - DB_NAME=${DB_NAME}
     env_file:
       - .env.docker
     depends_on:
