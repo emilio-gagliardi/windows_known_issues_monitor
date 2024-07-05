@@ -53,6 +53,24 @@ url_repo = URLRepository()
 
 
 async def send_email(subject: str, body: dict, recipients: list[str]):
+    """
+    Sends an email using SendGrid API with the specified subject, body, and recipients.
+
+    Args:
+        subject (str): The subject of the email.
+        body (dict): A dictionary containing URLs as keys and a list of scrapes as values.
+        recipients (list[str]): A list of email addresses to send the email to.
+
+    Returns:
+        Response: The response object from SendGrid API after sending the email.
+
+    Raises:
+        Exception: If an error occurs during the email sending process.
+
+    Note:
+        The body dictionary should have URLs as keys and a list of scrape objects as values.
+        Each scrape object should have attributes 'scrape_type', 'scrape_comment', and 'content'.
+    """
     message = Mail(
         from_email=os.getenv("SENDGRID_FROM_EMAIL"),
         to_emails=recipients,
@@ -84,6 +102,17 @@ async def send_email(subject: str, body: dict, recipients: list[str]):
 
 
 def format_scrape_content(scrape: ScrapeModel) -> str:
+    """
+    Format the scrape content from a ScrapeModel object into a human-readable string.
+
+    Parameters:
+        scrape (ScrapeModel): The ScrapeModel object containing the content to be formatted.
+
+    Returns:
+        str: A formatted string representing the content of the scrape, including last updated time, summary, status, and originating update.
+
+    If the content of the scrape cannot be parsed as JSON, an error message is returned.
+    """
     try:
         content_dict = json.loads(scrape.content)
         known_issues = content_dict.get("known_issues", {}).get("row", {})
@@ -100,6 +129,16 @@ def format_scrape_content(scrape: ScrapeModel) -> str:
 
 
 def process_url_for_title(url):
+    """
+    Process the URL to extract a title.
+
+    Parameters:
+    url (str): The URL from which to extract the title.
+
+    Returns:
+    str: The processed title extracted from the URL.
+
+    """
     # Parse the URL
     parsed_url = urlparse(url)
 
@@ -127,6 +166,17 @@ def process_url_for_title(url):
 def process_scraped_data(
     db: Session, db_url: URLModel, scraped_data: dict
 ) -> list[ScrapeModel]:
+    """
+    Process the scraped data and create new ScrapeModel instances for each row of known issues.
+
+    Args:
+        db (Session): The database session to perform database operations.
+        db_url (URLModel): The URLModel object representing the URL being scraped.
+        scraped_data (dict): The scraped data containing information about known issues.
+
+    Returns:
+        list[ScrapeModel]: A list of newly created ScrapeModel instances for the scraped data rows.
+    """
     new_scrapes = []
     for known_issue_row in scraped_data["known_issues"]["row"]:
         row_data = {
@@ -175,6 +225,26 @@ def process_scraped_data(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Asynchronous function to manage the lifespan of the FastAPI application.
+
+    This function handles the startup, initialization, and shutdown of the application.
+    During startup, it creates all database tables if they do not exist, loads the URL repository cache,
+    scrapes all URLs, sets up a scheduler to run the scraping task daily at a specific time in a specified timezone,
+    and starts the scheduler.
+
+    Parameters:
+    - app (FastAPI): The FastAPI application instance.
+
+    Raises:
+    - SQLAlchemyError: If an error occurs during the application lifespan related to the database connection or cache loading process.
+
+    Yields:
+    - None
+
+    Returns:
+    - None
+    """
     try:
         # Startup
         # logger.info("Creating all database tables if they do not exist.")
@@ -458,7 +528,7 @@ def read_scrapes_by_urlid(
             )
             return datetime.strptime(last_updated, "%Y-%m-%d")
         except Exception as e:
-            print(f"Error parsing date for scrape {scrape.id}: {str(e)}")
+            logger.error(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             return datetime.min
 
     sorted_scrapes = sorted(scrapes, key=parse_last_updated, reverse=True)
