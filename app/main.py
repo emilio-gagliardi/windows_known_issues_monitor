@@ -39,6 +39,10 @@ import re
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Content, Email
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from pytz import timezone
+
 from dotenv import load_dotenv
 
 # Set up basic logging
@@ -189,6 +193,9 @@ async def lifespan(app: FastAPI):
         )
         await scrape_all_urls_task(enable_deep_scrape)
         logger.info("Completed initial scraping of all URLs.")
+
+        # Set up the scheduler
+        scheduler = AsyncIOScheduler()
 
         yield
 
