@@ -197,6 +197,16 @@ async def lifespan(app: FastAPI):
         # Set up the scheduler
         scheduler = AsyncIOScheduler()
 
+        # Schedule the task to run daily at 6:00 AM in your timezone
+        scheduler.add_job(
+            scrape_all_urls_task,
+            CronTrigger(hour=6, minute=0, timezone=timezone("America/Edmonton")),
+            args=[enable_deep_scrape],
+        )
+
+        # Start the scheduler
+        scheduler.start()
+
         yield
 
     except SQLAlchemyError as e:
