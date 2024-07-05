@@ -15,7 +15,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse
 from collections import defaultdict
 
-# from app import models
 from app import schemas
 from app.database import get_db, engine, SessionLocal, Base
 from app.scraper import scrape_url, get_latest_scrape, periodic_scrape
@@ -185,6 +184,12 @@ async def lifespan(app: FastAPI):
         # Run the synchronous function in a thread pool
         await asyncio.to_thread(sync_load_cache)
         logger.info("URL repository loaded into cache.")
+        enable_deep_scrape = (
+            False  # Set this to True if you want to enable deep scraping
+        )
+        await scrape_all_urls_task(enable_deep_scrape)
+        logger.info("Completed initial scraping of all URLs.")
+
         yield
 
     except SQLAlchemyError as e:
@@ -198,6 +203,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application startup.")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Application shutdown.")
 
 
 @app.post("/urls/", response_model=schemas.URL)
