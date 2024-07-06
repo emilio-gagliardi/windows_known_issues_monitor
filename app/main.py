@@ -178,8 +178,8 @@ def process_scraped_data(
         list[ScrapeModel]: A list of newly created ScrapeModel instances for the scraped data rows.
     """
     new_scrapes = []
-    for known_issue_row in scraped_data["known_issues"]["row"]:
-        row_data = {
+    if "known_issues" in scraped_data and "row" in scraped_data["known_issues"]:
+        for known_issue_row in scraped_data["known_issues"]["row"]:
             "known_issues": {
                 "header": scraped_data["known_issues"]["header"],
                 "row": known_issue_row,
