@@ -528,7 +528,7 @@ def read_scrapes_by_urlid(
             )
             return datetime.strptime(last_updated, "%Y-%m-%d")
         except Exception as e:
-            logger.error(f"Error parsing date for scrape {scrape.id}: {str(e)}")
+            logger.exception(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             return datetime.min
 
     sorted_scrapes = sorted(scrapes, key=parse_last_updated, reverse=True)
