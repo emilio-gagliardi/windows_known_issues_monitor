@@ -33,18 +33,17 @@ import hashlib
 
 # import threading
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 import os
 import re
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Content, Email
+from sendgrid.helpers.mail import Mail, Content
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from pytz import timezone
 
-from dotenv import load_dotenv
-
+load_dotenv()
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,7 +55,7 @@ async def send_email(subject: str, body: dict, recipients: list[str]):
     """
     Sends an email using SendGrid API with the specified subject, body, and recipients.
 
-    Args:
+    Parameters:
         subject (str): The subject of the email.
         body (dict): A dictionary containing URLs as keys and a list of scrapes as values.
         recipients (list[str]): A list of email addresses to send the email to.
@@ -133,11 +132,10 @@ def process_url_for_title(url):
     Process the URL to extract a title.
 
     Parameters:
-    url (str): The URL from which to extract the title.
+        url (str): The URL from which to extract the title.
 
     Returns:
-    str: The processed title extracted from the URL.
-
+        str: The processed title extracted from the URL.
     """
     # Parse the URL
     parsed_url = urlparse(url)
@@ -169,7 +167,7 @@ def process_scraped_data(
     """
     Process the scraped data and create new ScrapeModel instances for each row of known issues.
 
-    Args:
+    Parameters:
         db (Session): The database session to perform database operations.
         db_url (URLModel): The URLModel object representing the URL being scraped.
         scraped_data (dict): The scraped data containing information about known issues.
@@ -180,11 +178,12 @@ def process_scraped_data(
     new_scrapes = []
     if "known_issues" in scraped_data and "row" in scraped_data["known_issues"]:
         for known_issue_row in scraped_data["known_issues"]["row"]:
-            "known_issues": {
-                "header": scraped_data["known_issues"]["header"],
-                "row": known_issue_row,
-            },
-        }
+            row_data = {
+                "known_issues": {
+                    "header": scraped_data["known_issues"]["header"],
+                    "row": known_issue_row,
+                },
+            }
         logger.info(f"Row data to be stored: {json.dumps(row_data, indent=2)}")
 
         content_hash = hashlib.md5(json.dumps(row_data).encode()).hexdigest()
@@ -234,16 +233,16 @@ async def lifespan(app: FastAPI):
     and starts the scheduler.
 
     Parameters:
-    - app (FastAPI): The FastAPI application instance.
+        app (FastAPI): The FastAPI application instance.
 
     Raises:
-    - SQLAlchemyError: If an error occurs during the application lifespan related to the database connection or cache loading process.
+        SQLAlchemyError: If an error occurs during the application lifespan related to the database connection or cache loading process.
 
     Yields:
-    - None
+        None
 
     Returns:
-    - None
+        None
     """
     try:
         # Startup
@@ -270,10 +269,13 @@ async def lifespan(app: FastAPI):
         # Schedule the task to run daily at 6:00 AM in your timezone
         scheduler.add_job(
             scrape_all_urls_task,
-            CronTrigger(hour=6, minute=0, timezone=timezone(os.getenv("TIMEZONE", "America/Edmonton"))),
+            CronTrigger(
+                hour=6,
+                minute=0,
+                timezone=timezone(os.getenv("TIMEZONE", "America/Edmonton")),
+            ),
             args=[enable_deep_scrape],
         )
-
         # Start the scheduler
         scheduler.start()
 
@@ -528,6 +530,7 @@ def read_scrapes_by_urlid(
             )
             return datetime.strptime(last_updated, "%Y-%m-%d")
         except Exception as e:
+            logger.exception(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             logger.exception(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             return datetime.min
 

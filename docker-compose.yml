@@ -37,6 +37,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
       - DB_NAME=${DB_NAME}
+    restart: unless-stopped
     env_file:
       - .env.docker
     networks:
@@ -54,6 +55,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
       - DB_NAME=${DB_NAME}
+    restart: unless-stopped
     env_file:
       - .env.docker
     depends_on:
