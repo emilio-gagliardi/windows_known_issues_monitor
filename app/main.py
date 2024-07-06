@@ -270,7 +270,7 @@ async def lifespan(app: FastAPI):
         # Schedule the task to run daily at 6:00 AM in your timezone
         scheduler.add_job(
             scrape_all_urls_task,
-            CronTrigger(hour=6, minute=0, timezone=timezone("America/Edmonton")),
+            CronTrigger(hour=6, minute=0, timezone=timezone(os.getenv("TIMEZONE", "America/Edmonton"))),
             args=[enable_deep_scrape],
         )
 
