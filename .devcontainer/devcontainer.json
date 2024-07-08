@@ -1,7 +1,7 @@
 {
     "name": "Python Dev Container",
-    "dockerFile": "Dockerfile",
-    "context": "..",
+    "dockerFile": "../Dockerfile",  // Path to Dockerfile from devcontainer folder
+    "context": "..",                // Context is the root directory
     "appPort": [
         8000,
         8501

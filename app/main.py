@@ -523,14 +523,12 @@ def read_scrapes_by_urlid(
     def parse_last_updated(scrape):
         try:
             content = json.loads(scrape.content)
-            last_updated = (
-                content["issue_details"]["row"]["History"]
-                .split("Last updated: ")[1]
-                .split(",")[0]
-            )
-            return datetime.strptime(last_updated, "%Y-%m-%d")
+            last_updated_str = content["known_issues"]["row"]["Last updated"]
+            # Remove timezone abbreviation
+            last_updated_str = " ".join(last_updated_str.split()[:-1])
+            last_updated = datetime.strptime(last_updated_str, "%Y-%m-%d %H:%M")
+            return last_updated
         except Exception as e:
-            logger.exception(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             logger.exception(f"Error parsing date for scrape {scrape.id}: {str(e)}")
             return datetime.min
 
